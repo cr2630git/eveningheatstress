@@ -6,15 +6,16 @@ pwsdataloc=strcat(icloud,'General_Academics/Research/LCLUC_Tuholske_2023-26/Data
 
 saveloc='/Volumes/ExternalDriveD/Various_LCLUC_arrays/';
 
-%setup_nctoolbox;
+
+dostartuptasks=0; %10 min; runs all "required on start-up" tasks
 
 reloaddata=0; %8 min; required on start-up
-readstndataanadplotmultistntimeseries=0; %1 min; need to check settings (see loop itself for details)
+readstndataanadplotmultistntimeseries=0; %1 min; need to check settings when running for the first time (see loop itself for details)
     makeplot=0;
 readpwsdata=0; %3 min
 domultivartimeseries=0; %10 sec; requires having already run wrfrunanalysis
 era5singlelevelreading_main=0; %30 min; once computed, heavy time-consuming elements can largely be reloaded
-era5pressurelevelreading_main=0; %8 min
+era5pressurelevelreading_main=0; %15 min
     alsodouandv=0; %sometimes only need to do T and q
 era5landreading_main=0; %30 min
 era5_twcalc_part1=0; %10 min for single level/all hours, same for pressure levels/4-hourly
@@ -25,30 +26,22 @@ reloadrharmradiosondes=0; %1.5 min
 diurnalcompositesetup=0; %90 min to redo everything
 era5p95diurnalcomposites=0; %4 min; prep for fig 3
 makefig3_revised=0; %4 min when reloading arrays, 30 sec otherwise; creates Fig 3
-makefig2_revised=0; %10 sec; creates Fig 2
+makefig2_asboxplots=1; %10 sec; creates Fig 2
 calcspreads_era5=0; %6 min
     minfrac=0.5; %default (for main Fig 1) is 0.5; for supplemental figure, 0.4; ALSO APPLIES TO CALCSPREADS_POINTDATA
-getvariousstats=0; %2 min; needs to be rerun upon start-up
-calcspreads_pointdata=0; %3 sec; needs to be rerun upon start-up
-map_tw_era5plusstns=0; %1 min; creates Fig 1b
-    if map_tw_era5plusstns==1;datasettodo='era5';zoomedin=0;end %'era5' or 'era5land'; zoomedin can be 1 or 0
-map_centralhours=0; %1 min; creates Fig 1c
-    if map_centralhours==1;zoomedin=0;end
-map_centralwinddirs=0; %1 min; creates Fig 1d
-    if map_centralwinddirs==1;zoomedin=0;end
-makefig1_revised=0; %45 sec; creates REVISED Fig 1
+getvariousstats=0; %2 min; required on start-up
+calcspreads_pointdata=0; %3 sec; required on start-up
+makefig1_revised=0; %45 sec; creates Fig 1
     if makefig1_revised==1;datasettodo='era5';end
 calcs_diurnalsequence=0; %30 min to restart all (i.e. when changing hotdaysbasedon)
-    hotdaysbasedon='liwaoasis'; %'abudhabi' or 'liwaoasis' (from besti_era5 array)
-finaldiurnalseqprep=0; %5 sec; must be rerun upon startup
+    hotdaysbasedon='abudhabi'; %'abudhabi' [default] or 'liwaoasis' (from besti_era5 array)
+finaldiurnalseqprep=0; %5 sec; required on start-up
 map_diurnalsequence=0; %25 sec; creates Fig 4
 getvertprofiles=0;
-    vertprofileprep=0; %2 min for RHARM only, 45 min to redo everything
-        dorharmprep=0;
-        doera5prep=0; %40 min
-    vertprofilefigure=0; %1 min; creates Fig 5
-makefig5_revised=1; %10 sec, or 15 min if tlevs_era5 et al. do not yet exist; creates Fig 5
-    donewera5prep=0;
+    vertprofileprep=0; 
+        dorharmprep=0; %2 min
+makefig5_revised=0; %15 sec for plotting alone; creates Fig 5
+    doera5prep=0; %15 min; requires having done era5pressurelevelreading_main
 readutciandwbgtdata=0; %1 hour; UTCI and WBGT were calculated in Jupyter notebook utci_wbgt_full.ipynb
 readlurompsheatindex=0; %8 min
 calcheatindex=0; %15 min
@@ -63,7 +56,7 @@ suppfigwinddirs=0; %1 min 20 sec
     plotdiurnalqrange=0;
    
 
-
+if dostartuptasks==1;setup_nctoolbox;reloaddata=1;getvariousstats=1;calcspreads_pointdata=1;finaldiurnalseqprep=1;end
 
 f=load(strcat(saveloc,'lcluchotdaysoutput_',hotdaysbasedon));
 tarray_twhotdays_mean=f.tarray_twhotdays_mean;qarray_twhotdays_mean=f.qarray_twhotdays_mean;
@@ -245,13 +238,13 @@ if reloaddata==1
     wbgt_era5_alltimemax=tmp.wbgt_era5_alltimemax;wbgt_era5_p95=tmp.wbgt_era5_p95;
 
     %ERA5 vertical profiles
-    tmp=load(strcat(saveloc,'hotdaysprofiles.mat'));
-    twprofile_twhotdays_era5_byloc=tmp.twprofile_twhotdays_era5_byloc;
-    tprofile_twhotdays_era5_byloc=tmp.tprofile_twhotdays_era5_byloc;
-    qprofile_twhotdays_era5_byloc=tmp.qprofile_twhotdays_era5_byloc;
-    twprofile_alldays_era5_byloc=tmp.twprofile_alldays_era5_byloc;
-    tprofile_alldays_era5_byloc=tmp.tprofile_alldays_era5_byloc;
-    qprofile_alldays_era5_byloc=tmp.qprofile_alldays_era5_byloc;
+    tmp=load(strcat(saveloc,'hotdaysprofiles_new.mat'));
+    twprofile_twhotdays_era5_mean=tmp.twprofile_twhotdays_era5_mean;twprofile_twhotdays_era5_stdev=tmp.twprofile_twhotdays_era5_stdev;
+    tprofile_twhotdays_era5_mean=tmp.tprofile_twhotdays_era5_mean;tprofile_twhotdays_era5_stdev=tmp.tprofile_twhotdays_era5_stdev;
+    qprofile_twhotdays_era5_mean=tmp.qprofile_twhotdays_era5_mean;qprofile_twhotdays_era5_stdev=tmp.qprofile_twhotdays_era5_stdev;
+    twprofile_alldays_era5_mean=tmp.twprofile_alldays_era5_mean;twprofile_alldays_era5_stdev=tmp.twprofile_alldays_era5_stdev;
+    tprofile_alldays_era5_mean=tmp.tprofile_alldays_era5_mean;tprofile_alldays_era5_stdev=tmp.tprofile_alldays_era5_stdev;
+    qprofile_alldays_era5_mean=tmp.qprofile_alldays_era5_mean;qprofile_alldays_era5_stdev=tmp.qprofile_alldays_era5_stdev;
 
     tmp=load(strcat(saveloc,'lsmaskera5.mat'));lsmask_era5=tmp.lsmask_era5;
     lsmask_era5_10xres=interp2(Xorig,Yorig,lsmask_era5,Xq,Yq);
@@ -435,12 +428,15 @@ if reloaddata==1
         if vl==1
             gridpttwp10byregandhr=gridptp10byregandhr;gridpttwp50byregandhr=gridptp50byregandhr;gridpttwp90byregandhr=gridptp90byregandhr;
             p10twbygridpt=p10byreg;p50twbygridpt=p50byreg;p90twbygridpt=p90byreg;
+            allgridpttw=allgridpt;
         elseif vl==2
             gridpttp10byregandhr=gridptp10byregandhr;gridpttp50byregandhr=gridptp50byregandhr;gridpttp90byregandhr=gridptp90byregandhr;
             p10tbygridpt=p10byreg;p50tbygridpt=p50byreg;p90tbygridpt=p90byreg;
+            allgridptt=allgridpt;
         elseif vl==3
             gridptqp10byregandhr=gridptp10byregandhr;gridptqp50byregandhr=gridptp50byregandhr;gridptqp90byregandhr=gridptp90byregandhr;
             p10qbygridpt=p10byreg;p50qbygridpt=p50byreg;p90qbygridpt=p90byreg;
+            allgridptq=allgridpt;
         end
     end
 
@@ -459,10 +455,10 @@ if reloaddata==1
             thistw=cat(1,squeeze(subdailytw_sPG(stn,:,:)),NaN.*ones(92*2,24)); %PWSs have 2 add'l years (2021-22), so fill NaNs to match
             thist=cat(1,squeeze(subdailyt_sPG(stn,:,:)),NaN.*ones(92*2,24));
             thisq=calcqfromTd(cat(1,squeeze(subdailytd_sPG(stn,:,:)),NaN.*ones(92*2,24)));
-        else %PWS -- in LST (so convert to UTC here)
-            thistw_tmp=squeeze(subdailytw_pws_hrs(stn-4,:,:));thistw=cat(2,thistw_tmp(:,5:24),thistw_tmp(:,1:4));
-            thist_tmp=squeeze(subdailyt_pws_hrs(stn-4,:,:));thist=cat(2,thist_tmp(:,5:24),thist_tmp(:,1:4));
-            thisq_tmp=calcqfromTd(squeeze(subdailytd_pws_hrs(stn-4,:,:)));thisq=cat(2,thisq_tmp(:,5:24),thisq_tmp(:,1:4));
+        else %PWS -- also in UTC
+            thistw=squeeze(subdailytw_pws_hrs(stn-4,:,:));%thistw=cat(2,thistw_tmp(:,5:24),thistw_tmp(:,1:4));
+            thist=squeeze(subdailyt_pws_hrs(stn-4,:,:));
+            thisq=calcqfromTd(squeeze(subdailytd_pws_hrs(stn-4,:,:)));
         end
 
         if ~isnan(reg)
@@ -575,6 +571,11 @@ if reloaddata==1
         end
     end
     clear days;
+
+    f=load(strcat(saveloc,'era5diurnalmeans'));
+    pblhp95_diurnalmean=f.pblhp95_diurnalmean;t2mp95_diurnalmean=f.t2mp95_diurnalmean;tw2mp95_diurnalmean=f.tw2mp95_diurnalmean;
+    q2mp95_diurnalmean=f.q2mp95_diurnalmean;winddir10p95_diurnalmode=f.winddir10p95_diurnalmode;windspd10p95_diurnalmean=f.windspd10p95_diurnalmean;
+    hi2mp95_diurnalmean=f.hi2mp95_diurnalmean;utci2mp95_diurnalmean=f.utci2mp95_diurnalmean;wbgt2mp95_diurnalmean=f.wbgt2mp95_diurnalmean;
 end
 
 
@@ -851,8 +852,10 @@ if era5pressurelevelreading_main==1
             ulevs(:,:,:,hrstart:hrstart+thislen*(24/everynthhour)-1)=ncread(fname,'u',startvec,countvec,stridevec); %m/s
             vlevs(:,:,:,hrstart:hrstart+thislen*(24/everynthhour)-1)=ncread(fname,'v',startvec,countvec,stridevec); %m/s
             end
+
             hrstart=hrstart+thislen*(24/everynthhour);
         end
+        if rem(y,5)==0;disp(y);disp(clock);end
     end
 
     %Now, note that first element of dim 4 is hr 1 = 00 UTC = 04 LST 
@@ -1212,16 +1215,27 @@ if makefig3_revised==1
                 end
             end
         end
-        if idx<length(arrsall) %everything but wind dir
+        if idx<length(arrsall) %for everything but wind dir
             for r=1:3
                 arrallregmean(r,:)=mean(arrallholder{r});
+                arrallregmeanminus1stdev(r,:)=mean(arrallholder{r})-std(arrallholder{r});
+                arrallregmeanplus1stdev(r,:)=mean(arrallholder{r})+std(arrallholder{r});
+
                 arr95regmean(r,:)=mean(arr95holder{r});
+                arr95regmeanminus1stdev(r,:)=mean(arr95holder{r})+std(arr95holder{r});
+                arr95regmeanplus1stdev(r,:)=mean(arr95holder{r})-std(arr95holder{r});
             end
-            arrsall_new{idx}=arrallregmean;arrs95_new{idx}=arr95regmean;
+            arrsall_mean{idx}=arrallregmean;arrsall_meanminus1stdev{idx}=arrallregmeanminus1stdev;arrsall_meanplus1stdev{idx}=arrallregmeanplus1stdev;
+            arrs95_mean{idx}=arr95regmean;arrs95_meanminus1stdev{idx}=arr95regmeanminus1stdev;arrs95_meanplus1stdev{idx}=arr95regmeanplus1stdev;
         else %wind dir
             for r=1:3
                 uallregmean(r,:)=mean(uallholder{r});vallregmean(r,:)=mean(vallholder{r});
+                uallregmeanminus1stdev(r,:)=mean(uallholder{r})-std(uallholder{r});uallregmeanplus1stdev(r,:)=mean(uallholder{r})+std(uallholder{r});
+                vallregmeanminus1stdev(r,:)=mean(vallholder{r})-std(vallholder{r});vallregmeanplus1stdev(r,:)=mean(vallholder{r})+std(vallholder{r});
+
                 u95regmean(r,:)=mean(u95holder{r});v95regmean(r,:)=mean(v95holder{r});
+                u95regmeanminus1stdev(r,:)=mean(u95holder{r})-std(u95holder{r});u95regmeanplus1stdev(r,:)=mean(u95holder{r})+std(u95holder{r});
+                v95regmeanminus1stdev(r,:)=mean(v95holder{r})-std(v95holder{r});v95regmeanplus1stdev(r,:)=mean(v95holder{r})+std(v95holder{r});
             end
         end
     end
@@ -1235,13 +1249,30 @@ if makefig3_revised==1
     %For each, plot 00 LST as first element
     for loop=1:3 %regions
         cr=newregcolors(loop,:);
+        difffrommax=max(cr)-cr;cr_pale=cr+0.4*difffrommax;
 
         for sp=1:7
             subplot(3,3,sp);
-            arrall=arrsall_new{sp};arr95=arrs95_new{sp};
+            arrall_mean=[squeeze(arrsall_mean{sp}(loop,21:24))';squeeze(arrsall_mean{sp}(loop,1:20))'];
+                arrall_minus1stdev=[squeeze(arrsall_meanminus1stdev{sp}(loop,21:24))';squeeze(arrsall_meanminus1stdev{sp}(loop,1:20))'];
+                arrall_plus1stdev=[squeeze(arrsall_meanplus1stdev{sp}(loop,21:24))';squeeze(arrsall_meanplus1stdev{sp}(loop,1:20))'];
+            arr95_mean=[squeeze(arrs95_mean{sp}(loop,21:24))';squeeze(arrs95_mean{sp}(loop,1:20))'];
+                arr95_minus1stdev=[squeeze(arrs95_meanminus1stdev{sp}(loop,21:24))';squeeze(arrs95_meanminus1stdev{sp}(loop,1:20))'];
+                arr95_plus1stdev=[squeeze(arrs95_meanplus1stdev{sp}(loop,21:24))';squeeze(arrs95_meanplus1stdev{sp}(loop,1:20))'];
+
+            %Include error bars only at 00, 04, 08, etc. LST
+            arrall_neg=arrall_minus1stdev-arrall_mean;arrall_pos=arrall_plus1stdev-arrall_mean;
+            arr95_neg=arr95_minus1stdev-arr95_mean;arr95_pos=arr95_plus1stdev-arr95_mean;
+            for i=1:24
+                if rem(i,4)~=1;arrall_neg(i)=NaN;arrall_pos(i)=NaN;end
+                if rem(i,4)~=2;arr95_neg(i)=NaN;arr95_pos(i)=NaN;end
+            end
                 
-            plot([squeeze(arrall(loop,21:24))';squeeze(arrall(loop,1:20))'],'linestyle',':','linewidth',1.7,'color',cr);hold on;
-            plot([squeeze(arr95(loop,21:24))';squeeze(arr95(loop,1:20))'],'linestyle','-','linewidth',1.5,'color',cr);
+            %plot(arrall_mean,'linestyle',':','linewidth',1.7,'color',cr);hold on;
+            %plot(arr95_mean,'linestyle','-','linewidth',1.5,'color',cr);
+            p=errorbar(1:24,arrall_mean,arrall_neg,arrall_pos,'linestyle',':','linewidth',1.7,'color',cr_pale,'CapSize',0);hold on;p.Bar.LineStyle='dotted';
+            p=errorbar(1:24,arr95_mean,arr95_neg,arr95_pos,'linestyle','-','linewidth',1.7,'color',cr,'CapSize',0);
+            
             xlim([1 24]);maketitle(titles{sp});set(gca,'fontweight','bold');set(gca,'xtick',xticks,'xticklabel',xtl);
             ylabel(ylabs{sp},'fontweight','bold','fontname','arial','fontsize',11);
             if sp==1;ylim([20 32]);elseif sp==2;ylim([24 55]);elseif sp==3;ylim([23 35]);elseif sp==4;ylim([30 52]);elseif sp==5;ylim([28 45]);...
@@ -1250,7 +1281,7 @@ if makefig3_revised==1
             if sp==7;xlabel('Time (LST)','fontweight','bold','fontname','arial','fontsize',12);end
         end
         
-        
+        %Wind direction
         sp=8;subplot(3,3,sp);hold on;
             %For clarity, plot wind vectors
             the_yorder=[1;2;3];
@@ -1263,7 +1294,7 @@ if makefig3_revised==1
 
                 ucomp=uall_lst(hr);vcomp=vall_lst(hr);
                 ucomp_norm=ucomp./(8.*sqrt(ucomp.^2+vcomp.^2));vcomp_norm=vcomp./(8.*sqrt(ucomp.^2+vcomp.^2)); %arbritrary shrinkage to look good
-                anArrow=annotation('arrow','color',cr,'linewidth',1.5,'linestyle',':','headlength',7,'headwidth',7,'headstyle','deltoid');anArrow.Parent=gca;
+                anArrow=annotation('arrow','color',cr_pale,'linewidth',1.5,'linestyle',':','headlength',7,'headwidth',7,'headstyle','deltoid');anArrow.Parent=gca;
                 %This part is a bit hacky, but c'est la vie
                 %In a 3x2 grid, by default each subplot is about 3cm tall by 8cm wide on the screen
                 %Therefore, the x component needs to be multiplied by 3/8 so that e.g. 315 deg truly looks like a NW wind, 337.5 is NNW, etc
@@ -1279,8 +1310,28 @@ if makefig3_revised==1
             t=text(-0.05,0.55,splabels{sp},'units','normalized');set(t,'fontweight','bold','fontname','arial','fontsize',12);
             xlabel('Time (LST)','fontweight','bold','fontname','arial','fontsize',12);
 
-        sp=9;subplot(3,3,sp);hold on;plot([squeeze(arrsall_new{8}(loop,21:24))';squeeze(arrsall_new{8}(loop,1:20))'],'linestyle',':','linewidth',1.7,'color',cr);hold on;
-            plot([squeeze(arrs95_new{8}(loop,21:24))';squeeze(arrs95_new{8}(loop,1:20))'],'linestyle','-','linewidth',1.5,'color',cr);
+        %Wind speed
+        sp=9;subplot(3,3,sp);hold on;
+            arrall_mean=[squeeze(arrsall_mean{sp-1}(loop,21:24))';squeeze(arrsall_mean{sp-1}(loop,1:20))'];
+                arrall_minus1stdev=[squeeze(arrsall_meanminus1stdev{sp-1}(loop,21:24))';squeeze(arrsall_meanminus1stdev{sp-1}(loop,1:20))'];
+                arrall_plus1stdev=[squeeze(arrsall_meanplus1stdev{sp-1}(loop,21:24))';squeeze(arrsall_meanplus1stdev{sp-1}(loop,1:20))'];
+            arr95_mean=[squeeze(arrs95_mean{sp-1}(loop,21:24))';squeeze(arrs95_mean{sp-1}(loop,1:20))'];
+                arr95_minus1stdev=[squeeze(arrs95_meanminus1stdev{sp-1}(loop,21:24))';squeeze(arrs95_meanminus1stdev{sp-1}(loop,1:20))'];
+                arr95_plus1stdev=[squeeze(arrs95_meanplus1stdev{sp-1}(loop,21:24))';squeeze(arrs95_meanplus1stdev{sp-1}(loop,1:20))'];
+
+            %Include error bars only at 00, 04, 08, etc. LST
+            arrall_neg=arrall_minus1stdev-arrall_mean;arrall_pos=arrall_plus1stdev-arrall_mean;
+            arr95_neg=arr95_minus1stdev-arr95_mean;arr95_pos=arr95_plus1stdev-arr95_mean;
+            for i=1:24
+                if rem(i,4)~=1;arrall_neg(i)=NaN;arrall_pos(i)=NaN;end
+                if rem(i,4)~=2;arr95_neg(i)=NaN;arr95_pos(i)=NaN;end
+            end
+
+            %plot(arrall_mean,'linestyle',':','linewidth',1.7,'color',cr);hold on;
+            %plot(arr95_mean,'linestyle','-','linewidth',1.5,'color',cr);
+            p=errorbar(1:24,arrall_mean,arrall_neg,arrall_pos,'linestyle',':','linewidth',1.7,'color',cr_pale,'CapSize',0);hold on;p.Bar.LineStyle='dotted';
+            p=errorbar(1:24,arr95_mean,arr95_neg,arr95_pos,'linestyle','-','linewidth',1.7,'color',cr,'CapSize',0);
+
             xlim([1 24]);maketitle('Wind Speed');set(gca,'fontweight','bold');set(gca,'xtick',xticks,'xticklabel',xtl);
             ylabel(ylabs{sp},'fontweight','bold','fontname','arial','fontsize',11);
             ylim([1.7 6.2]);box on;
@@ -1300,9 +1351,9 @@ if makefig3_revised==1
 
     makefigr1=0; %default 0, as this is just for reviewer response
     if makefigr1==1
-        tall=arrsall_new{5};tdall=calcTdfromq(arrsall_new{6});
+        tall=arrsall_mean{5};tdall=calcTdfromq(arrsall_mean{6});
         rhall=calcrhfromTandTd(tall,tdall);
-        t95=arrs95_new{5};td95=calcTdfromq(arrs95_new{6});
+        t95=arrs95_mean{5};td95=calcTdfromq(arrs95_mean{6});
         rh95=calcrhfromTandTd(t95,td95);
 
         figure(45);clf;hold on;
@@ -1324,59 +1375,91 @@ end
 
 
 
-if makefig2_revised==1
-    %Plot gridpts and stns in same panel, as LST
-    %for gridpt arrays: unweighted have no suffix; weighted are suffixed '_w'
-    figure(1001);clf;c=0;figname='fig2_rev';
+if makefig2_asboxplots==1
+    figure(1002);clf;c=0;figname='fig2_boxplots';
+    lefts=[0.05 0.52;0.05 0.52;0.05 0.52];bottoms=[0.69 0.69;0.385 0.385;0.08 0.08];wwidth=0.42;hheight=0.26;
     for vl=1:3
         if vl==1
-            basenum=700;
-            stnp10=stntwp10byregandhr;stnp50=stntwp50byregandhr;stnp90=stntwp90byregandhr;
-            gridptp10=gridpttwp10byregandhr;gridptp50=gridpttwp50byregandhr;gridptp90=gridpttwp90byregandhr;
-            %gridptp10_w=gridpttwp10byregandhr_w;gridptp50_w=gridpttwp50byregandhr_w;gridptp90_w=gridpttwp90byregandhr_w;
-            gridptp10_w=gridpttwp10byregandhr_w_alt;gridptp50_w=gridpttwp50byregandhr_w_alt;gridptp90_w=gridpttwp90byregandhr_w_alt;
-            ymin=16;ymax=31;ylab=strcat('Tw (',char(176),'C)');
-            tmp=colormaps('whitelightorangedarkorange','more','not');mycolor=tmp(95,:);
+            allstn=allstntw;allgridpt=allgridpttw;ylab=strcat('Tw (',char(176),'C)');
         elseif vl==2
-            basenum=800;
-            stnp10=stntp10byregandhr;stnp50=stntp50byregandhr;stnp90=stntp90byregandhr;
-            gridptp10=gridpttp10byregandhr;gridptp50=gridpttp50byregandhr;gridptp90=gridpttp90byregandhr;
-            %gridptp10_w=gridpttp10byregandhr_w;gridptp50_w=gridpttp50byregandhr_w;gridptp90_w=gridpttp90byregandhr_w;
-            gridptp10_w=gridpttp10byregandhr_w_alt;gridptp50_w=gridpttp50byregandhr_w_alt;gridptp90_w=gridpttp90byregandhr_w_alt;
-            ymin=22;ymax=50;ylab=strcat('T (',char(176),'C)');
-            tmp=colormaps('whitelightgreendarkgreen','more','not');mycolor=tmp(95,:);
+            allstn=allstnt;allgridpt=allgridptt;ylab=strcat('T (',char(176),'C)');
         elseif vl==3
-            basenum=900;
-            stnp10=stnqp10byregandhr;stnp50=stnqp50byregandhr;stnp90=stnqp90byregandhr;
-            gridptp10=gridptqp10byregandhr;gridptp50=gridptqp50byregandhr;gridptp90=gridptqp90byregandhr;
-            %gridptp10_w=gridptqp10byregandhr_w;gridptp50_w=gridptqp50byregandhr_w;gridptp90_w=gridptqp90byregandhr_w;
-            gridptp10_w=gridptqp10byregandhr_w_alt;gridptp50_w=gridptqp50byregandhr_w_alt;gridptp90_w=gridptqp90byregandhr_w_alt;
-            ymin=5;ymax=26;ylab='q (g/kg)';
-            tmp=colormaps('whitelightpurpledarkpurple','more','not');mycolor=tmp(95,:);
+            allstn=allstnq;allgridpt=allgridptq;ylab='q (g/kg)';
         end
-
         for reg=2:3
             subplot(3,2,vl*2-2+reg-1);hold on;c=c+1;
-            plot([stnp10(reg,21:24)';stnp10(reg,1:20)'],'color',mycolor,'marker','s','markerfacecolor',mycolor,'markersize',5,'linewidth',1.5);
-                plot([stnp90(reg,21:24)';stnp90(reg,1:20)'],'color',mycolor,'marker','s','markerfacecolor',mycolor,'markersize',5,'linewidth',1.5);
-            addweightedgridpts=1;
-            if addweightedgridpts==1
-                plot([gridptp10_w(reg,21:24)';gridptp10_w(reg,1:20)'],'color',mycolor,'linewidth',2);
-                plot([gridptp90_w(reg,21:24)';gridptp90_w(reg,1:20)'],'color',mycolor,'linewidth',2);
-            else
-                plot([gridptp10(reg,21:24)';gridptp10(reg,1:20)'],'color',mycolor,'linewidth',2);
-                plot([gridptp90(reg,21:24)';gridptp90(reg,1:20)'],'color',mycolor,'linewidth',2);
+            stndatabyhr_tmp=reshape(allstn{reg},[size(allstn{reg},1)*size(allstn{reg},2) size(allstn{reg},3)]);
+            gridptdatabyhr_tmp=reshape(allgridpt{reg},[size(allgridpt{reg},1)*size(allgridpt{reg},2) size(allgridpt{reg},3)]);
+
+            %Convert from UTC to LST
+            stndatabyhr=cat(2,stndatabyhr_tmp(:,21:24),stndatabyhr_tmp(:,1:20));
+            gridptdatabyhr=cat(2,gridptdatabyhr_tmp(:,21:24),gridptdatabyhr_tmp(:,1:20));
+
+
+            data=[];groups=[];stnsz=size(stndatabyhr,1);gridptsz=size(gridptdatabyhr,1);
+            for hr=1:2:24
+                data=cat(1,data,stndatabyhr(:,hr));data=cat(1,data,gridptdatabyhr(:,hr));
+                groups=cat(1,groups,(hr-1)*2+ones(stnsz,1));groups=cat(1,groups,(hr-1)*2+1+ones(gridptsz,1));
             end
-            set(gcf,'color','w');
+            positions=[1 1.7 3 3.7 5 5.7 7 7.7 9 9.7 11 11.7 13 13.7 15 15.7 17 17.7 19 19.7 21 21.7 23 23.7];
+            bh=boxplot(data,groups,'positions',positions,'symbol','','width',0.4); %with outliers removed
+
+            set(bh,'linewidth',1.5);
+            ax=gca;
+            for i=25:168
+                if rem(i,2)==0
+                    ax.Children.Children(i).Color=colors('sirkes_dark gold'); %stations
+                else
+                    ax.Children.Children(i).Color='k'; %ERA5 gridpts
+                end
+                ax.Children.Children(i).LineWidth=1;
+            end
+            %Delete whisker endcaps for station data, to help distinguish groups
+            allTags=get(bh,'tag');isCap=contains(allTags,'Adjacent');considerdeleting=bh(isCap);
+            %for i=1:4:length(considerdeleting);delete(considerdeleting(i));end
+            %for i=2:4:length(considerdeleting);delete(considerdeleting(i));end
+            for i=1:length(considerdeleting);delete(considerdeleting(i));end
+
+            %Fill boxes with color for better visual impression
+            colorarr=[colors('gray');colors('sirkes_dark gold')];colorarr=repmat(colorarr,[12 1]);
+            h=findobj(gca,'Tag','Box');
+            for j=1:length(h);patch(get(h(j),'XData'),get(h(j),'YData'),colorarr(j,:),'FaceAlpha',0.5);end
+
+            %set(gca,'ylim',[round2(min(data),1,'floor') round2(max(data),1,'ceil')]);
+            if vl==1;set(gca,'ylim',[11 34]);elseif vl==2;set(gca,'ylim',[19 50]);elseif vl==3;set(gca,'ylim',[0 32]);end
+            set(gca,'xtick',[1:4:24],'xticklabel',{'00';'04';'08';'12';'16';'20'});
             set(gca,'fontweight','bold','fontname','arial','fontsize',11);
-            set(gca,'xtick',1:4:24,'xticklabel',{'00','04','08','12','16','20'},'xlim',[1 24],'ylim',[ymin ymax]);
-            t=text(-0.05,0.55,splabels{c},'units','normalized');set(t,'fontweight','bold','fontname','arial','fontsize',12);
+            
+            t=text(-0.045,0.53,splabels{c},'units','normalized');set(t,'fontweight','bold','fontname','arial','fontsize',12);
             if vl==3;xlabel('Time (LST)','fontweight','bold','fontname','arial','fontsize',12);end
             if reg==2;ylabel(ylab,'fontweight','bold','fontname','arial','fontsize',12);end
             if reg==2;titletext='Coast';elseif reg==3;titletext='Inland';end
             if vl==1;title(titletext,'fontweight','bold','fontname','arial','fontsize',12);end
+
+            otherapproach=0;
+            if otherapproach==1
+                clear A;A{1}=stndatabyhr;A{2}=gridptdatabyhr;
+                boxplotGroup(A,'whisker',3);
+    
+                %To improve cleanliness of plot, remove boxplots for hours 01, 03, 05 LST -- #2, 4, 6, etc.
+                ax=gca;
+                for bp=1:2 %each boxplot group
+                    bh=ax.Children(bp).Children;
+                    for hrtoremove=2:2:24
+                        idxtoremove=25-hrtoremove;
+                        for elem=1:7
+                            bh(24*(elem-1)+idxtoremove).Color='w';
+                            if elem==1;bh(24*(elem-1)+idxtoremove).Marker='none';end
+                        end
+                    end
+                    for hr=1:24;bh(hr).MarkerEdgeColor='k';bh(hr).Size=4;end %instead of red and 6
+                end
+            end
+
+            set(gca,'position',[lefts(vl,reg-1) bottoms(vl,reg-1) wwidth hheight]);
         end
     end
+    set(gcf,'color','w');
     curpart=1;highqualityfiguresetup;curpart=2;highqualityfiguresetup;
 end
 
@@ -1739,210 +1822,6 @@ if calcspreads_pointdata==1
 end
 
 
-
-
-if map_tw_era5plusstns==1
-    figure(800);clf;
-    cmin=25;cmax=31;
-    if strcmp(datasettodo,'era5')
-        data={lat_era5;lon_era5;tw_era5_p95};
-    elseif strcmp(datasettodo,'era5land')
-        data={lat_era5land;lon_era5land;tw_era5l_p95};
-    end
-    cmap=colormaps('wbt','more','not');
-    vararginnew={'mapproj';'mercator';'datatounderlay';data;'underlaycaxismin';cmin;'underlaycaxismax';cmax;'underlaystepsize';0.5;'underlaycolormap';cmap;
-        'contour_underlay';0;'contourunderlayfill';1;'contourunderlaycolors';cmap;'centeredon';0;...
-        'overlaynow';0;'conttoplot';'all';'nonewfig';1;'omitfirstsubplotcolorbar';0;...
-        'colorbarfontsize';14};
-    datatype='custom';region={wb;nb;eb;sb};plotModelData(data,region,vararginnew,datatype);
-    hold on;
-
-    %Overlay PWSs
-    for stn=1:length(pwsstnnames)
-        thisp95val=tw_pws_p95(stn);
-        if ~isnan(thisp95val)
-            if thisp95val<cmin
-                valcolor=cmap(1,:);
-            elseif thisp95val>cmax
-                valcolor=cmap(end,:);
-            else
-                valcolor=cmap(round(size(cmap,1)*(thisp95val-cmin)/(cmax-cmin)),:);
-            end
-        end
-        geoshow(pwsstnlats(stn),pwsstnlons(stn),'DisplayType','Point','Marker','d','MarkerFaceColor',valcolor,'MarkerEdgeColor','k','MarkerSize',8,'linewidth',1.5);
-    end
-
-    %Overlay stn data
-    %Put it on top because it's more reliable
-    for reg=1:3
-        r=regnames{reg};stninfo=eval(['stninfo_' r]);
-        for stn=1:size(stninfo,1)
-            thisp95val=eval(['tw_' r 'stns_p95(stn);']);
-            if ~isnan(thisp95val)
-                if thisp95val<cmin
-                    valcolor=cmap(1,:);
-                elseif thisp95val>cmax
-                    valcolor=cmap(end,:);
-                else
-                    valcolor=cmap(round(size(cmap,1)*(thisp95val-cmin)/(cmax-cmin)),:);
-                end
-            end
-
-            geoshow(stninfo(stn,1),stninfo(stn,2),'DisplayType','Point','Marker','o','MarkerFaceColor',valcolor,'MarkerEdgeColor','k','MarkerSize',8,'linewidth',1.5);
-        end
-    end
-
-    maketitle('Tw p95');
-    if nb==vsmmap_n;suf='_zoomedin';else;suf='';end
-    figname=strcat('twp95_with',datasettodo,suf);
-    set(gcf,'color','w');curpart=1;highqualityfiguresetup;curpart=2;highqualityfiguresetup;
-    
-
-    %Make big version for supplement
-    dothis=0;
-    if dothis==1
-        figure(89);clf;
-        cmin=20;cmax=31;
-        data={lat_era5;lon_era5;tw_era5_p95};
-        cmap=colormaps('wbt','more','not');
-        vararginnew={'mapproj';'mercator';'datatounderlay';data;'underlaycaxismin';cmin;'underlaycaxismax';cmax;'underlaystepsize';0.5;'underlaycolormap';cmap;
-            'contour_underlay';0;'contourunderlayfill';1;'contourunderlaycolors';cmap;'centeredon';0;...
-            'overlaynow';0;'conttoplot';'all';'nonewfig';1;'omitfirstsubplotcolorbar';0;...
-            'colorbarfontsize';14};
-        datatype='custom';region={lgmap_w;lgmap_n;lgmap_e;lgmap_s};plotModelData(data,region,vararginnew,datatype);
-        figname=strcat('twp95_withera5_large');
-        set(gcf,'color','w');curpart=1;highqualityfiguresetup;curpart=2;highqualityfiguresetup;
-    end
-end
-
-
-if map_centralhours==1
-    figure(60);clf;
-    data={lat_era5;lon_era5;centralhours_local_era5};
-    cmap=colormaps('mygbm','24','not');cmin=1;cmax=24;
-    vararginnew={'mapproj';'mercator';'datatounderlay';data;'underlaycaxismin';cmin;'underlaycaxismax';cmax;'underlaystepsize';1;'underlaycolormap';cmap;
-        'contour_underlay';0;'contourunderlayfill';1;'contourunderlaycolors';cmap;'centeredon';0;...
-        'overlaynow';0;'variable';'wind';'conttoplot';'Asia';'nonewfig';1;'omitfirstsubplotcolorbar';0;...
-        'colorbarfontsize';14};
-    datatype='custom';region={wb;nb;eb;sb};plotModelData(data,region,vararginnew,datatype);
-
-    %Overlay PWSs
-    for stn=1:length(pwsstnnames)
-        stnhour=centralhours_local_pws(stn);
-        if ~isnan(stnhour)
-            if stnhour<cmin
-                valcolor=cmap(1,:);
-            elseif stnhour>cmax
-                valcolor=cmap(end,:);
-            else
-                valcolor=cmap(round(size(cmap,1)*(stnhour-cmin)/(cmax-cmin)),:);
-            end
-        end
-        geoshow(pwsstnlats(stn),pwsstnlons(stn),'DisplayType','Point','Marker','d','MarkerFaceColor',valcolor,'MarkerEdgeColor','k','MarkerSize',8,'linewidth',1.5);
-    end
-
-    %Overlay stn data
-    hold on;
-    for reg=1:3
-        r=regnames{reg};stninfo=eval(['stninfo_' r]);
-        for stn=1:size(stninfo,1)
-            stnhour=eval(['centralhours_local_' r '(stn);']);
-            if ~isnan(stnhour)
-                if stnhour<=cmin
-                    valcolor=cmap(1,:);
-                elseif stnhour>=cmax
-                    valcolor=cmap(end,:);
-                else
-                    valcolor=cmap(round(size(cmap,1)*(stnhour-cmin)/(cmax-cmin)),:);
-                end
-    
-                geoshow(stninfo(stn,1),stninfo(stn,2),'DisplayType','Point','Marker','o','MarkerFaceColor',valcolor,'MarkerEdgeColor','k','MarkerSize',8,'linewidth',1.5);
-            end
-        end
-    end
-    maketitle('Hour of Peak Tw (LST)');
-    if nb==vsmmap_n;suf='_zoomedin';else;suf='';end
-    set(gcf,'color','w');curpart=1;highqualityfiguresetup;figname=strcat('hourofpeaktw',suf);curpart=2;highqualityfiguresetup;
-
-    dothis=0;
-    if dothis==1
-        figure(61);clf;
-        cmin=20;cmax=31;
-        data={lat_era5;lon_era5;centralhours_local_era5};
-        cmap=colormaps('mygbm','24','not');
-        vararginnew={'mapproj';'mercator';'datatounderlay';data;'underlaycaxismin';1;'underlaycaxismax';24;'underlaystepsize';1;'underlaycolormap';cmap;
-            'contour_underlay';0;'contourunderlayfill';1;'contourunderlaycolors';cmap;'centeredon';0;...
-            'overlaynow';0;'variable';'wind';'conttoplot';'all';'nonewfig';1;'omitfirstsubplotcolorbar';0;...
-            'colorbarfontsize';14};
-        datatype='custom';region={lgmap_w;lgmap_n;lgmap_e;lgmap_s};plotModelData(data,region,vararginnew,datatype);
-        set(gcf,'color','w');curpart=1;highqualityfiguresetup;figname='hourofpeaktw_large';curpart=2;highqualityfiguresetup;
-    end
-end
-
-if map_centralwinddirs==1
-    figure(70);clf;
-    data={lat_era5;lon_era5;centralwinddirs_era5};
-    cmap=colormaps('mygbm','12','not');cmin=0;cmax=360;
-    vararginnew={'mapproj';'mercator';'datatounderlay';data;'underlaycaxismin';cmin;'underlaycaxismax';cmax;'underlaystepsize';30;'underlaycolormap';cmap;
-        'contour_underlay';0;'contourunderlayfill';1;'contourunderlaycolors';cmap;'centeredon';0;...
-        'overlaynow';0;'variable';'wind';'conttoplot';'Asia';'nonewfig';1;'omitfirstsubplotcolorbar';0;...
-        'colorbarfontsize';14;'colorbarticks';[0:60:360]};
-    datatype='custom';region={wb;nb;eb;sb};plotModelData(data,region,vararginnew,datatype);
-
-    %Overlay PWSs
-    for stn=1:length(pwsstnnames)
-        stnwinddir=centralwinddirs_pws(stn);
-        if ~isnan(stnwinddir)
-            if stnwinddir<=cmin
-                valcolor=cmap(1,:);
-            elseif stnwinddir>=cmax
-                valcolor=cmap(end,:);
-            else
-                valcolor=cmap(round(size(cmap,1)*(stnwinddir-cmin)/(cmax-cmin)),:);
-            end
-        end
-        geoshow(pwsstnlats(stn),pwsstnlons(stn),'DisplayType','Point','Marker','d','MarkerFaceColor',valcolor,'MarkerEdgeColor','k','MarkerSize',8,'linewidth',1.5);
-    end
-
-    %Overlay stn data
-    hold on;
-    for reg=1:3
-        r=regnames{reg};stninfo=eval(['stninfo_' r]);
-        for stn=1:size(stninfo,1)
-            stnwinddir=eval(['centralwinddirs_' r '(stn);']);
-            if ~isnan(stnwinddir)
-                if stnwinddir<=cmin
-                    valcolor=cmap(1,:);
-                elseif stnwinddir>=cmax
-                    valcolor=cmap(end,:);
-                else
-                    valcolor=cmap(round(size(cmap,1)*(stnwinddir-cmin)/(cmax-cmin)),:);
-                end
-    
-                geoshow(stninfo(stn,1),stninfo(stn,2),'DisplayType','Point','Marker','o','MarkerFaceColor',valcolor,'MarkerEdgeColor','k','MarkerSize',8,'linewidth',1.5);
-            end
-        end
-    end
-    maketitle('Wind Direction of Peak Tw');
-    if nb==vsmmap_n;suf='_zoomedin';else;suf='';end
-    set(gcf,'color','w');curpart=1;highqualityfiguresetup;figname=strcat('winddirofpeaktw',suf);curpart=2;highqualityfiguresetup;
-
-
-    dothis=0;
-    if dothis==1
-        figure(71);clf;
-        data={lat_era5;lon_era5;centralwinddirs_era5};
-        cmap=colormaps('mygbm','12','not');cmin=0;cmax=360;
-        vararginnew={'mapproj';'mercator';'datatounderlay';data;'underlaycaxismin';cmin;'underlaycaxismax';cmax;'underlaystepsize';30;'underlaycolormap';cmap;
-            'contour_underlay';0;'contourunderlayfill';1;'contourunderlaycolors';cmap;'centeredon';0;...
-            'overlaynow';0;'variable';'wind';'conttoplot';'all';'nonewfig';1;'omitfirstsubplotcolorbar';0;...
-            'colorbarfontsize';14;'colorbarticks';[0:30:360]};
-        datatype='custom';region={lgmap_w;lgmap_n;lgmap_e;lgmap_s};plotModelData(data,region,vararginnew,datatype);
-        set(gcf,'color','w');curpart=1;highqualityfiguresetup;figname='winddirofpeaktw_large';curpart=2;highqualityfiguresetup;
-    end
-end
-
-
 if makefig1_revised==1
     figure(800);clf;
 
@@ -2127,6 +2006,8 @@ if makefig1_revised==1
 
     if minfrac==0.5;figname='fig1_rev';elseif minfrac==0.4;figname='figsX_minfrac04';else;disp('See line 2600!');return;end
     set(gcf,'color','w');curpart=1;highqualityfiguresetup;curpart=2;highqualityfiguresetup;
+
+    clear gca;
 end
 
 
@@ -2285,11 +2166,12 @@ if map_diurnalsequence==1
     %purples: T&q>75 or >90
     %if T and q are of a different category, use dominant one
     %e.g. T>90 but q only >75 --> shade as dark orange
-    figure(11);clf;hold on;
+    figure(11);clf;hold on;clear gca;
     figname=strcat('diurnalsequencemap_',hotdaysbasedon);
-    lefts=[0.01 0.17 0.33 0.49 0.65 0.81;0.01 0.17 0.33 0.49 0.65 0.81];
+    lefts=[0.03 0.19 0.35 0.51 0.67 0.83;0.03 0.19 0.35 0.51 0.67 0.83];
     bottoms=[0.5.*ones(1,6);0.2.*ones(1,6)];
-    splabels_row1={'a';'b';'c';'d';'e';'f'};splabels_row2={'g';'h';'i';'j';'k';'l'};
+    splabels_row1={'a)';'b)';'c)';'d)';'e)';'f)'};splabels_row2={'g)';'h)';'i)';'j)';'k)';'l)'};
+    timelabels={'12am';'4am';'8am';'12pm';'4pm';'8pm'};
     
     for row=1:2
         if row==1
@@ -2297,9 +2179,9 @@ if map_diurnalsequence==1
         elseif row==2
             qarr75=qmap75_twhotdays;qarr90=qmap90_twhotdays;tarr75=tmap75_twhotdays;tarr90=tmap90_twhotdays;uarr=umap_twhotdays;varr=vmap_twhotdays;splabels=splabels_row2;
         end
-        for col=1:6
+        for col=1:6 %times of day
     
-            subplot(10,10,100);
+            subplot(10,10,100);hold on;
     
             mymap_u=double(squeeze(uarr(:,:,col)));mymap_v=double(squeeze(varr(:,:,col)));
             q75=double(squeeze(qarr75(:,:,col)));q90=double(squeeze(qarr90(:,:,col)));
@@ -2334,24 +2216,20 @@ if map_diurnalsequence==1
 
             R=georefcells([min(min(lat_era5)) max(max(lat_era5))],[min(min(lon_era5)) max(max(lon_era5))],size(mymap_t),'ColumnsStartFrom','north');
             
-
-            maxval=8;
-            v=-0.5:maxval-0.5;
-            Z1=mymap_t_holes;
-            
-            contourfm(Z1,R,v,'LineColor','none');alpha(0.7);
+            maxval=8;v=-0.5:maxval-0.5;
             cmap=[colormaps('whitelightorangedarkorange','more','not');colormaps('whitelightgreendarkgreen','more','not');...
                 colormaps('whitelightpurpledarkpurple','more','not')];
             colormap(cmap);clim([0 maxval+0.05]);
-            xticks=[4/3-0.1:4/3:8];
-            xticklabel={'T>p75';'T>p90';'q>p75';'q>p90';'T,q>p75';'T,q>p90'};
+
+            Z1=mymap_t_holes;
+            settonan=Z1==0;Z1(settonan)=NaN;Z1(1,1)=0; %set blank areas to NaN
+            contourfm(Z1,R,v,'LineColor','none');alpha(0.7);
 
             if row==1 && col==1
-            cb=colorbar('horiz');set(cb,'position',[0.3 0.15 0.4 0.02],'xtick',xticks,'xticklabel',xticklabel,'fontweight','bold','fontsize',10);
+                xticks=[4/3-0.1:4/3:8];xticklabel={'T>p75';'T>p90';'q>p75';'q>p90';'T,q>p75';'T,q>p90'};
+                cb=colorbar('horiz');set(cb,'position',[0.3 0.14 0.4 0.02],'xtick',xticks,'xticklabel',xticklabel,'fontweight','bold','fontsize',10);
             end
-            
-            hold on;
-            
+                        
             Z2=mymap_q_holes;
             settonan=Z2==0;Z2(settonan)=NaN;Z2(1,1)=0; %set blank areas to NaN to avoid overwriting previously plotted colors with white
             contourfm(Z2,R,v,'LineColor','none');alpha(0.7);
@@ -2360,11 +2238,6 @@ if map_diurnalsequence==1
             settonan=Z3==0;Z3(settonan)=NaN;Z3(1,1)=0; %set blank areas to NaN to avoid overwriting previously plotted colors with white
             v=6.5:8.5;
             contourfm(Z3,R,v,'LineColor','none');alpha(0.7);
-
-            %if row==2 && col==4
-            %    cb=colorbar('horiz');
-            %    set(cb,'position',[0.3 0.05 0.4 0.02],'xtick',[0.9:maxval-0.1],'xticklabel',xticklabel,'fontweight','bold','fontsize',10);
-            %end
             
             conttoplot='Asia';co='w';cbc='k';clw=1;addborders;
             set(findall(myax,'Tag','PLabel'),'visible','off');set(findall(myax,'Tag','MLabel'),'visible','off');
@@ -2373,10 +2246,29 @@ if map_diurnalsequence==1
     
             quivermc(lat_era5,lon_era5,mymap_u,mymap_v,'dontaddtext','maparea',((nb-sb)*(eb-wb)),'elongationfactor',9,'skipfactor',4,'linewidth',1.3);
 
-            %t=text(-0.05,1.02,splabels{col},'units','normalized');set(t,'fontsize',11,'fontweight','bold','fontname','arial');
+            t=text(-0.03,0.53,splabels{col},'units','normalized');set(t,'fontsize',11,'fontweight','bold','fontname','arial');
+            title(timelabels{col},'fontsize',12,'fontweight','bold','fontname','arial');
 
             %Show location with red pentagram
             geoshow(mylat,mylon,'DisplayType','Point','Marker','p','MarkerFaceColor','r','MarkerEdgeColor','r','MarkerSize',9);
+
+            %Legend
+            if row==2 && col==6
+                t=annotation('arrow',[0.815 0.84],[0.147 0.147],'color','k','linewidth',1.5,'headstyle','plain','headwidth',6,'headlength',7);
+                t=annotation('arrow',[0.90 0.915],[0.147 0.147],'color','k','linewidth',1.7,'headstyle','none');
+                t=text(-0.065,-0.15,'5 m/s','units','normalized');set(t,'fontsize',10.5,'fontweight','bold','fontname','arial');
+                t=text(0.187,-0.15,'100 km','units','normalized');set(t,'fontsize',10.5,'fontweight','bold','fontname','arial');
+            end
+
+            %Lat/lon labels
+            if col==1
+                toshow=strcat('25',char(176));t=text(-0.065,0.28,toshow,'units','normalized');set(t,'fontsize',10.5,'fontweight','bold','fontname','arial');
+                toshow=strcat('20',char(176));t=text(-0.07,0.005,toshow,'units','normalized');set(t,'fontsize',10.5,'fontweight','bold','fontname','arial');
+            end
+            if row==2 && rem(col,2)==1
+                toshow=strcat('50',char(176));t=text(-0.025,-0.025,toshow,'units','normalized');set(t,'fontsize',10.5,'fontweight','bold','fontname','arial');
+                toshow=strcat('60',char(176));t=text(0.475,-0.025,toshow,'units','normalized');set(t,'fontsize',10.5,'fontweight','bold','fontname','arial');
+            end
         end
     end
     curpart=1;highqualityfiguresetup;curpart=2;highqualityfiguresetup;
@@ -2456,190 +2348,20 @@ if getvertprofiles==1
 
              save(strcat(saveloc,'hotdaysprofiles_rharm.mat'),'twprofile_alldays_rharm_byloc','twprofile_twhotdays_rharm_byloc');
         end
-        
-    
-        if doera5prep==1
-            %Reminder: levels obtained here were 500, 700, 850, 925, 975, 1000
-            exist twlev_days;
-            if ans==0
-                f=load(strcat(saveloc,'twlevs.mat'));twlevs_era5=f.tw2m;clear f;
-                twlev_days=reshape(twlevs_era5,[nlat nlon 6 6 climodaylen*nyr]);clear twlevs_era5; %dims are lat | lon | lev | hours in day | days
-        
-                tlev_days=reshape(tlevs_era5,[nlat nlon 6 6 climodaylen*nyr]);clear tlevs_era5;
-                qlev_days=reshape(qlevs_era5,[nlat nlon 6 6 climodaylen*nyr]);clear qlevs_era5;
-            end
-        
-            %Get vert profile on all days and on p95 days as defined earlier (i.e.
-            %those for which sum(tw95whereabove(i,j,:,day))>=1)
-            %1 min
-            for loc=1:4
-                twprofile_alldays_era5_byloc(loc,:,:)=squeeze(mean(twlev_days(besti_era5(loc),bestj_era5(loc),:,:,:),5,'omitnan'));
-                tprofile_alldays_era5_byloc(loc,:,:)=squeeze(mean(tlev_days(besti_era5(loc),bestj_era5(loc),:,:,:),5,'omitnan'));
-                qprofile_alldays_era5_byloc(loc,:,:)=squeeze(mean(qlev_days(besti_era5(loc),bestj_era5(loc),:,:,:),5,'omitnan'));
-            end
-        
-            %about 30 min
-            twprofile_twhotdays=NaN.*ones(nlat,nlon,6,6);tprofile_twhotdays=NaN.*ones(nlat,nlon,6,6);qprofile_twhotdays=NaN.*ones(nlat,nlon,6,6);
-            for i=1:nlat
-                for j=1:nlon
-                    c=0;tmptw=zeros(1,6,6);tmpt=zeros(1,6,6);tmpq=zeros(1,6,6);
-                    for day=1:climodaylen*nyr
-                        if sum(tw95whereabove(i,j,:,day))>=1
-                            c=c+1;
-                            tmptw(c,:,:)=twlev_days(i,j,:,:,day);
-                            tmpt(c,:,:)=tlev_days(i,j,:,:,day);
-                            tmpq(c,:,:)=qlev_days(i,j,:,:,day);
-                        end
-                    end
-                    twprofile_twhotdays(i,j,:,:)=squeeze(mean(tmptw,'omitnan'));
-                    tprofile_twhotdays(i,j,:,:)=squeeze(mean(tmpt,'omitnan'));
-                    qprofile_twhotdays(i,j,:,:)=squeeze(mean(tmpq,'omitnan'));
-                end
-            end
-            for loc=1:4
-                twprofile_twhotdays_era5_byloc(loc,:,:)=squeeze(twprofile_twhotdays(besti_era5(loc),bestj_era5(loc),:,:));
-                tprofile_twhotdays_era5_byloc(loc,:,:)=squeeze(tprofile_twhotdays(besti_era5(loc),bestj_era5(loc),:,:));
-                qprofile_twhotdays_era5_byloc(loc,:,:)=squeeze(qprofile_twhotdays(besti_era5(loc),bestj_era5(loc),:,:));
-            end
-            save(strcat(saveloc,'hotdaysprofiles.mat'),'twprofile_twhotdays_era5_byloc','tprofile_twhotdays_era5_byloc','qprofile_twhotdays_era5_byloc',...
-                'twprofile_alldays_era5_byloc','tprofile_alldays_era5_byloc','qprofile_alldays_era5_byloc');
-        end
-    end
-
-
-    if vertprofilefigure==1
-        %Stn prep (Abu Dhabi -- loc 1)
-        stntwarray=squeeze(subdailytw_sPG(1,:,:));
-        c=0;clear stntw;
-        for day=1:climodaylen*nyr
-            if sum(tw95whereabove(besti_era5(1),bestj_era5(1),:,day))>=1
-                c=c+1;
-                stntw(c,:)=stntwarray(day,:);
-            end
-        end
-        abudhabitw_twhotdays=mean(stntw,'omitnan');
-        abudhabitw_alldays=mean(stntwarray,'omitnan');
-
-        figure(700);clf;subplotc=0;
-        horizspacing=0.16;
-        lefts=repmat([0.845-horizspacing*5;0.845-horizspacing*4;0.845-horizspacing*3;0.845-horizspacing*2;0.845-horizspacing*1;0.845],4,1);
-        bottoms=[repmat(0.75,6,1);repmat(0.51,6,1);repmat(0.27,6,1);repmat(0.03,6,1)];
-        w_big=0.14;h_big=0.22;
-        cmap_tw=colormaps('whitelightpurpledarkpurple','more','not');twcolor=cmap_tw(round(3*end/4),:);
-        cmap_t=colormaps('whitelightorangedarkorange','more','not');tcolor=cmap_t(round(3*end/4),:);
-        cmap_q=colormaps('whitelightgreendarkgreen','more','not');qcolor=cmap_q(round(3*end/4),:);
-    
-        for row=1:4 %rows
-            for col=1:6 %cols
-                subplotc=subplotc+1;
-                axes('position',[0.1 0.1 0.1 0.1]);hold on;
-                if row==1;loc=2;elseif row==2;loc=1;else;loc=row;end %so Gulf is top row
-                if col>=2;coltopullfrom=col-1;elseif col==1;coltopullfrom=6;end
-
-                plot(fliplr(twprofile_alldays_era5_byloc(loc,2:6,coltopullfrom)),1:5,'color',twcolor,'linestyle','--','linewidth',2); %leave out position 1 (500 mb) to better see lower-level behavior
-                plot(fliplr(twprofile_twhotdays_era5_byloc(loc,2:6,coltopullfrom)),1:5,'color',twcolor,'linestyle','-','linewidth',2); 
-                xlim([3 30]);
-                if col==1
-                    set(gca,'ytick',1:5,'yticklabel',{'1000';'975';'925';'850';'700'},'ylim',[1 5]);
-                else
-                    set(gca,'ytick',1:5,'yticklabel','','ylim',[1 5]);
-                end
-                if row==4 %last row
-                    set(gca,'xtick',10:10:30);
-                else
-                    set(gca,'xtick',10:10:30,'xticklabel','');
-                end
-                set(gca,'ticklength',[0.02 0.01])
-                set(gca,'fontweight','bold','fontname','arial','fontsize',10);
-                set(gca,'position',[lefts(subplotc),bottoms(subplotc),w_big,h_big]);
-
-                %Add RHARM data where available (only Abu Dhabi)
-                %Note: current labeled version does not have this
-                %radiosonde data included, just because it doesn't really add much
-                rharmhotcolor=colors('pink');rharmallcolor=colors('sky blue');
-                stnhotcolor=colors('orange');stnallcolor=colors('sirkes_gold');
-                correspyidx=[NaN;5;4;3;2.5;2;1.4;1];
-                %4am LST
-                if row==2 && col==2
-                    for plotlev=2:size(twprofile_twhotdays_rharm_byloc,2) %i.e. will plot 700, 850, 925, 950, 975, 990, 1000
-                        scatter(twprofile_twhotdays_rharm_byloc(1,plotlev,2),correspyidx(plotlev),50,...
-                            'marker','pentagram','MarkerFaceColor',rharmhotcolor,'MarkerEdgeColor',rharmhotcolor);
-                        scatter(twprofile_alldays_rharm_byloc(1,plotlev,2),correspyidx(plotlev),50,...
-                            'marker','pentagram','MarkerFaceColor',rharmallcolor,'MarkerEdgeColor',rharmallcolor);
-                    end
-                    %At bottom, add HadISD station
-                    scatter(abudhabitw_twhotdays(1),1,50,'marker','s','MarkerFaceColor',stnhotcolor,'MarkerEdgeColor',stnhotcolor);
-                    scatter(abudhabitw_alldays(1),1,50,'marker','s','MarkerFaceColor',stnallcolor,'MarkerEdgeColor',stnallcolor);
-                end
-                %4pm LST
-                if row==2 && col==5
-                    for plotlev=2:size(twprofile_twhotdays_rharm_byloc,2)
-                        scatter(twprofile_twhotdays_rharm_byloc(1,plotlev,5),correspyidx(plotlev),50,...
-                            'marker','pentagram','MarkerFaceColor',rharmhotcolor,'MarkerEdgeColor',rharmhotcolor);
-                        scatter(twprofile_alldays_rharm_byloc(1,plotlev,5),correspyidx(plotlev),50,...
-                            'marker','pentagram','MarkerFaceColor',rharmallcolor,'MarkerEdgeColor',rharmallcolor);
-                    end
-                    %At bottom, add HadISD station
-                    scatter(abudhabitw_twhotdays(13),1,50,'marker','s','MarkerFaceColor',stnhotcolor,'MarkerEdgeColor',stnhotcolor);
-                    scatter(abudhabitw_alldays(13),1,50,'marker','s','MarkerFaceColor',stnallcolor,'MarkerEdgeColor',stnallcolor);
-                end
-                %Infill HadISD only:
-                if row==2 && col==3 %8am
-                    scatter(abudhabitw_twhotdays(5),1,50,'marker','s','MarkerFaceColor',stnhotcolor,'MarkerEdgeColor',stnhotcolor);
-                    scatter(abudhabitw_alldays(5),1,50,'marker','s','MarkerFaceColor',stnallcolor,'MarkerEdgeColor',stnallcolor);
-                elseif row==2 && col==4 %12pm
-                    scatter(abudhabitw_twhotdays(9),1,50,'marker','s','MarkerFaceColor',stnhotcolor,'MarkerEdgeColor',stnhotcolor);
-                    scatter(abudhabitw_alldays(9),1,50,'marker','s','MarkerFaceColor',stnallcolor,'MarkerEdgeColor',stnallcolor);
-                elseif row==2 && col==6 %8pm
-                    scatter(abudhabitw_twhotdays(17),1,50,'marker','s','MarkerFaceColor',stnhotcolor,'MarkerEdgeColor',stnhotcolor);
-                    scatter(abudhabitw_alldays(17),1,50,'marker','s','MarkerFaceColor',stnallcolor,'MarkerEdgeColor',stnallcolor);
-                elseif row==2 && col==1 %12am
-                    scatter(abudhabitw_twhotdays(21),1,50,'marker','s','MarkerFaceColor',stnhotcolor,'MarkerEdgeColor',stnhotcolor);
-                    scatter(abudhabitw_alldays(21),1,50,'marker','s','MarkerFaceColor',stnallcolor,'MarkerEdgeColor',stnallcolor);
-                end
-    
-                %Now try adding T and q in small plots overlaid!
-                %T
-                axes('position',[0.1 0.1 0.1 0.1]);hold on;
-                plot(fliplr(tprofile_alldays_era5_byloc(loc,2:6,coltopullfrom)),1:5,'color',tcolor,'linestyle','--','linewidth',2);
-                plot(fliplr(tprofile_twhotdays_era5_byloc(loc,2:6,coltopullfrom)),1:5,'color',tcolor,'linestyle','-','linewidth',2); 
-                set(gca,'ytick',1:5,'yticklabel','','ticklength',[0.04 0.01],'ylim',[1 5]);
-                %tmp=get(gca,'xlim');xmin=tmp(1);xmax=tmp(2);
-                %set(gca,'xtick',round2(xmin,10,'ceil'):10:round2(xmax,10,'floor'),'xticklabelrotation',0);
-                set(gca,'xlim',[15 45],'xtick',20:10:40,'xticklabelrotation',0);
-                set(gca,'position',[lefts(subplotc)+0.14*w_big,bottoms(subplotc)+0.09*h_big,w_big/3,h_big/3]);
-                set(gca,'fontweight','bold','fontname','arial','fontsize',8);
-    
-                %q
-                axes('position',[0.1 0.1 0.1 0.1]);hold on;
-                plot(fliplr(qprofile_alldays_era5_byloc(loc,2:6,coltopullfrom)),1:5,'color',qcolor,'linestyle','--','linewidth',2);
-                plot(fliplr(qprofile_twhotdays_era5_byloc(loc,2:6,coltopullfrom)),1:5,'color',qcolor,'linestyle','-','linewidth',2); 
-                set(gca,'ytick',1:5,'yticklabel','','ticklength',[0.04 0.01],'ylim',[1 5]);
-                %tmp=get(gca,'xlim');xmin=tmp(1);xmax=tmp(2);
-                %if rem(xmax,10)==0;xmax=xmax+1;end;set(gca,'xlim',[xmin xmax]);
-                %if round2(xmax,10,'floor')==round2(xmin,10,'ceil');xval=5;else;xval=10;end
-                %set(gca,'xtick',round2(xmin,xval,'ceil'):xval:round2(xmax,xval,'floor'),'xticklabelrotation',0);
-                set(gca,'xlim',[3 26],'xtick',5:10:25,'xticklabelrotation',0);
-                set(gca,'position',[lefts(subplotc)+0.66*w_big,bottoms(subplotc)+0.66*h_big,w_big/3,h_big/3]);
-                set(gca,'fontweight','bold','fontname','arial','fontsize',8);
-            end
-        end
-        set(gcf,'color','w');
-        figname='vertprofiles';
-        curpart=1;highqualityfiguresetup;curpart=2;highqualityfiguresetup;
     end
 end
 
 
 if makefig5_revised==1
-    if donewera5prep==1
+    if doera5prep==1
         %Reminder: levels obtained here were 500, 700, 850, 925, 975, 1000
         exist twlev_days;
         if ans==0
             f=load(strcat(saveloc,'twlevs.mat'));twlevs_era5=f.tw2m;clear f;
             twlev_days=reshape(twlevs_era5,[nlat nlon 6 6 climodaylen*nyr]);clear twlevs_era5; %dims are lat | lon | lev | hours in day | days
-    
-            exist tlevs_era5;if ans==0;disp('Need to rerun era5pressurelevelreading_main for T and q');return;end
+        end
+        exist tlevs_days;
+        if ans==0
             tlev_days=reshape(tlevs_era5,[nlat nlon 6 6 climodaylen*nyr]);clear tlevs_era5;
             qlev_days=reshape(qlevs_era5,[nlat nlon 6 6 climodaylen*nyr]);clear qlevs_era5;
         end
@@ -2658,14 +2380,21 @@ if makefig5_revised==1
                 end
             end
         end
-        twprofile_alldays_era5_byloc=NaN.*ones(3,6,6);
-        tprofile_alldays_era5_byloc=NaN.*ones(3,6,6);qprofile_alldays_era5_byloc=NaN.*ones(3,6,6);
+        %Get region means and st devs
+        twprofile_alldays_era5_mean=NaN.*ones(3,6,6);tprofile_alldays_era5_mean=NaN.*ones(3,6,6);qprofile_alldays_era5_mean=NaN.*ones(3,6,6);
+        twprofile_alldays_era5_stdev=NaN.*ones(3,6,6);tprofile_alldays_era5_stdev=NaN.*ones(3,6,6);qprofile_alldays_era5_stdev=NaN.*ones(3,6,6);
         for r=1:3
-            twprofile_alldays_era5_byloc(r,:,:)=squeeze(mean(squeeze(mean(twholder{r},'omitnan')),3,'omitnan'));
-            tprofile_alldays_era5_byloc(r,:,:)=squeeze(mean(squeeze(mean(tholder{r},'omitnan')),3,'omitnan'));
-            qprofile_alldays_era5_byloc(r,:,:)=squeeze(mean(squeeze(mean(qholder{r},'omitnan')),3,'omitnan'));
+            twprofile_alldays_era5_mean(r,:,:)=squeeze(mean(squeeze(mean(twholder{r},'omitnan')),3,'omitnan'));
+            tprofile_alldays_era5_mean(r,:,:)=squeeze(mean(squeeze(mean(tholder{r},'omitnan')),3,'omitnan'));
+            qprofile_alldays_era5_mean(r,:,:)=squeeze(mean(squeeze(mean(qholder{r},'omitnan')),3,'omitnan'));
+
+            d1=size(twholder{r},1);d4=size(twholder{r},4);
+            twprofile_alldays_era5_stdev(r,:,:)=squeeze(std(reshape(permute(twholder{r},[4 1 2 3]),[d1*d4 6 6])));
+            tprofile_alldays_era5_stdev(r,:,:)=squeeze(std(reshape(permute(tholder{r},[4 1 2 3]),[d1*d4 6 6])));
+            qprofile_alldays_era5_stdev(r,:,:)=squeeze(std(reshape(permute(qholder{r},[4 1 2 3]),[d1*d4 6 6])));
         end
     
+        %Repeat for p95 days
         exist tw95whereabove;if ans==0;f=load(strcat(saveloc,'hotdaysstarts.mat'));tw95whereabove=f.tw95whereabove;end;clear tmp;
         twprofile_twhotdays=NaN.*ones(nlat,nlon,6,6);tprofile_twhotdays=NaN.*ones(nlat,nlon,6,6);qprofile_twhotdays=NaN.*ones(nlat,nlon,6,6);
         for i=1:nlat
@@ -2700,16 +2429,22 @@ if makefig5_revised==1
                 end
             end
         end
-        %Get region means
-        twprofile_twhotdays_era5_byloc=NaN.*ones(3,6,6);
-        tprofile_twhotdays_era5_byloc=NaN.*ones(3,6,6);qprofile_twhotdays_era5_byloc=NaN.*ones(3,6,6);
+        %Get region means and st devs
+        twprofile_twhotdays_era5_mean=NaN.*ones(3,6,6);tprofile_twhotdays_era5_mean=NaN.*ones(3,6,6);qprofile_twhotdays_era5_mean=NaN.*ones(3,6,6);
+        twprofile_twhotdays_era5_stdev=NaN.*ones(3,6,6);tprofile_twhotdays_era5_stdev=NaN.*ones(3,6,6);qprofile_twhotdays_era5_stdev=NaN.*ones(3,6,6);
         for r=1:3
-            twprofile_twhotdays_era5_byloc(r,:,:)=squeeze(mean(twholder{r}));
-            tprofile_twhotdays_era5_byloc(r,:,:)=squeeze(mean(tholder{r}));
-            qprofile_twhotdays_era5_byloc(r,:,:)=squeeze(mean(qholder{r}));
+            twprofile_twhotdays_era5_mean(r,:,:)=squeeze(mean(twholder{r}));
+            tprofile_twhotdays_era5_mean(r,:,:)=squeeze(mean(tholder{r}));
+            qprofile_twhotdays_era5_mean(r,:,:)=squeeze(mean(qholder{r}));
+
+            twprofile_twhotdays_era5_stdev(r,:,:)=squeeze(std(twholder{r}));
+            tprofile_twhotdays_era5_stdev(r,:,:)=squeeze(std(tholder{r}));
+            qprofile_twhotdays_era5_stdev(r,:,:)=squeeze(std(qholder{r}));
         end
-        save(strcat(saveloc,'hotdaysprofiles_new.mat'),'twprofile_twhotdays_era5_byloc','tprofile_twhotdays_era5_byloc','qprofile_twhotdays_era5_byloc',...
-            'twprofile_alldays_era5_byloc','tprofile_alldays_era5_byloc','qprofile_alldays_era5_byloc');
+        save(strcat(saveloc,'hotdaysprofiles_new.mat'),'twprofile_twhotdays_era5_mean','tprofile_twhotdays_era5_mean','qprofile_twhotdays_era5_mean',...
+            'twprofile_alldays_era5_mean','tprofile_alldays_era5_mean','qprofile_alldays_era5_mean',...
+            'twprofile_twhotdays_era5_stdev','tprofile_twhotdays_era5_stdev','qprofile_twhotdays_era5_stdev',...
+            'twprofile_alldays_era5_stdev','tprofile_alldays_era5_stdev','qprofile_alldays_era5_stdev');
     end
 
 
@@ -2735,6 +2470,9 @@ if makefig5_revised==1
     cmap_tw=colormaps('whitelightpurpledarkpurple','more','not');twcolor=cmap_tw(round(3*end/4),:);
     cmap_t=colormaps('whitelightorangedarkorange','more','not');tcolor=cmap_t(round(3*end/4),:);
     cmap_q=colormaps('whitelightgreendarkgreen','more','not');qcolor=cmap_q(round(3*end/4),:);
+    difffrommax=max(twcolor)-twcolor;twcolor_pale=twcolor+0.4*difffrommax;
+    difffrommax=max(tcolor)-tcolor;tcolor_pale=tcolor+0.4*difffrommax;
+    difffrommax=max(qcolor)-qcolor;qcolor_pale=qcolor+0.4*difffrommax;
     timelabels={'12am';'4am';'8am';'12pm';'4pm';'8pm'};
     reglabels={'Gulf';'Coast';'Inland'};
 
@@ -2744,9 +2482,21 @@ if makefig5_revised==1
             axes('position',[0.1 0.1 0.1 0.1]);hold on;
             if col>=2;coltopullfrom=col-1;elseif col==1;coltopullfrom=6;end %to account for UTC-LST difference
 
-            plot(fliplr(twprofile_alldays_era5_byloc(row,2:6,coltopullfrom)),1:5,'color',twcolor,'linestyle','--','linewidth',2); %leave out position 1 (500 mb) to better see lower-level behavior
-            plot(fliplr(twprofile_twhotdays_era5_byloc(row,2:6,coltopullfrom)),1:5,'color',twcolor,'linestyle','-','linewidth',2); 
-            xlim([3 30]);
+            allmeantoplot=fliplr(twprofile_alldays_era5_mean(row,2:6,coltopullfrom));
+                allmean_1stdevneg=-1.*fliplr(twprofile_alldays_era5_stdev(row,2:6,coltopullfrom));
+                allmean_1stdevpos=1.*fliplr(twprofile_alldays_era5_stdev(row,2:6,coltopullfrom));
+            hotmeantoplot=fliplr(twprofile_twhotdays_era5_mean(row,2:6,coltopullfrom));
+                hotmean_1stdevneg=-1.*fliplr(twprofile_twhotdays_era5_stdev(row,2:6,coltopullfrom));
+                hotmean_1stdevpos=1.*fliplr(twprofile_twhotdays_era5_stdev(row,2:6,coltopullfrom));
+
+            %In plotting, leave out 500 mb to better see lower-level behavior
+            plot(allmeantoplot,1:5,'color',twcolor_pale,'linestyle',':','linewidth',2);hold on;
+            p=errorbar(allmeantoplot,1:5,NaN,NaN,allmean_1stdevneg,allmean_1stdevpos,'linestyle',':','linewidth',1.2,'color',twcolor_pale,'CapSize',1.5);
+                for i=1:5;p(i).Bar.LineStyle='dotted';end
+            plot(hotmeantoplot,1:5,'color',twcolor,'linestyle','-','linewidth',2); 
+            p=errorbar(hotmeantoplot,1:5,NaN,NaN,hotmean_1stdevneg,hotmean_1stdevpos,'linestyle','-','linewidth',1.7,'color',twcolor,'CapSize',2.5);
+
+            xlim([3 32]);
             if col==1
                 set(gca,'ytick',1:5,'yticklabel',{'1000';'975';'925';'850';'700'},'ylim',[1 5]);
             else
@@ -2814,24 +2564,54 @@ if makefig5_revised==1
                 scatter(abudhabitw_alldays(21),1,50,'marker','s','MarkerFaceColor',stnallcolor,'MarkerEdgeColor',stnallcolor);
             end
 
+            if row==3 && col==3
+                t=text(0.24,-0.12,strcat('Wet-bulb Temperature (',char(176),'C)'),'units','normalized');
+                set(t,'fontname','arial','fontsize',11,'fontweight','bold');
+            end
+
             %Now add T and q in small plots overlaid!
             %T
             axes('position',[0.1 0.1 0.1 0.1]);hold on;
-            plot(fliplr(tprofile_alldays_era5_byloc(row,2:6,coltopullfrom)),1:5,'color',tcolor,'linestyle','--','linewidth',2);
-            plot(fliplr(tprofile_twhotdays_era5_byloc(row,2:6,coltopullfrom)),1:5,'color',tcolor,'linestyle','-','linewidth',2); 
+            allmeantoplot=fliplr(tprofile_alldays_era5_mean(row,2:6,coltopullfrom));
+                allmean_1stdevneg=-1.*fliplr(tprofile_alldays_era5_stdev(row,2:6,coltopullfrom));
+                allmean_1stdevpos=1.*fliplr(tprofile_alldays_era5_stdev(row,2:6,coltopullfrom));
+            hotmeantoplot=fliplr(tprofile_twhotdays_era5_mean(row,2:6,coltopullfrom));
+                hotmean_1stdevneg=-1.*fliplr(tprofile_twhotdays_era5_stdev(row,2:6,coltopullfrom));
+                hotmean_1stdevpos=1.*fliplr(tprofile_twhotdays_era5_stdev(row,2:6,coltopullfrom));
+
+            plot(allmeantoplot,1:5,'color',tcolor_pale,'linestyle',':','linewidth',1.7);
+            p=errorbar(allmeantoplot,1:5,NaN,NaN,allmean_1stdevneg,allmean_1stdevpos,'linestyle',':','linewidth',1.3,'color',tcolor_pale,'CapSize',0);
+                for i=1:5;p(i).Bar.LineStyle='dotted';end
+            plot(hotmeantoplot,1:5,'color',tcolor,'linestyle','-','linewidth',1.7); 
+            p=errorbar(hotmeantoplot,1:5,NaN,NaN,hotmean_1stdevneg,hotmean_1stdevpos,'linestyle','-','linewidth',1.3,'color',tcolor,'CapSize',0);
+
             set(gca,'ytick',1:5,'yticklabel','','ticklength',[0.04 0.01],'ylim',[1 5]);
             set(gca,'xlim',[15 45],'xtick',20:10:40,'xticklabelrotation',0);
             set(gca,'position',[lefts(subplotc)+0.14*w_big,bottoms(subplotc)+0.09*h_big,w_big/3,h_big/3]);
             set(gca,'fontweight','bold','fontname','arial','fontsize',8);
+            if row==1 && col==1;title('T','fontname','arial','fontsize',9,'fontweight','bold');end
 
             %q
             axes('position',[0.1 0.1 0.1 0.1]);hold on;
-            plot(fliplr(qprofile_alldays_era5_byloc(row,2:6,coltopullfrom)),1:5,'color',qcolor,'linestyle','--','linewidth',2);
-            plot(fliplr(qprofile_twhotdays_era5_byloc(row,2:6,coltopullfrom)),1:5,'color',qcolor,'linestyle','-','linewidth',2); 
+            allmeantoplot=fliplr(qprofile_alldays_era5_mean(row,2:6,coltopullfrom));
+                allmean_1stdevneg=-1.*fliplr(qprofile_alldays_era5_stdev(row,2:6,coltopullfrom));
+                allmean_1stdevpos=1.*fliplr(qprofile_alldays_era5_stdev(row,2:6,coltopullfrom));
+            hotmeantoplot=fliplr(qprofile_twhotdays_era5_mean(row,2:6,coltopullfrom));
+                hotmean_1stdevneg=-1.*fliplr(qprofile_twhotdays_era5_stdev(row,2:6,coltopullfrom));
+                hotmean_1stdevpos=1.*fliplr(qprofile_twhotdays_era5_stdev(row,2:6,coltopullfrom));
+
+            plot(allmeantoplot,1:5,'color',qcolor_pale,'linestyle',':','linewidth',1.7);
+            p=errorbar(allmeantoplot,1:5,NaN,NaN,allmean_1stdevneg,allmean_1stdevpos,'linestyle','--','linewidth',1.3,'color',qcolor_pale,'CapSize',0);
+                for i=1:5;p(i).Bar.LineStyle='dotted';end
+            plot(hotmeantoplot,1:5,'color',qcolor,'linestyle','-','linewidth',1.7); 
+            p=errorbar(hotmeantoplot,1:5,NaN,NaN,hotmean_1stdevneg,hotmean_1stdevpos,'linestyle','-','linewidth',1.3,'color',qcolor,'CapSize',0);
+
             set(gca,'ytick',1:5,'yticklabel','','ticklength',[0.04 0.01],'ylim',[1 5]);
             set(gca,'xlim',[3 26],'xtick',5:10:25,'xticklabelrotation',0);
             set(gca,'position',[lefts(subplotc)+0.66*w_big,bottoms(subplotc)+0.66*h_big,w_big/3,h_big/3]);
             set(gca,'fontweight','bold','fontname','arial','fontsize',8);
+            if row==1 && col==1;title('q','fontname','arial','fontsize',9,'fontweight','bold');end
+
         end
     end
     set(gcf,'color','w');
