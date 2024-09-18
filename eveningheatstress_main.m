@@ -25,22 +25,22 @@ readmoreradiosondelevels=0; %4 hr
 reloadrharmradiosondes=0; %1.5 min
 diurnalcompositesetup=0; %90 min to redo everything
 era5p95diurnalcomposites=0; %4 min; prep for fig 3
-makefig3_revised=0; %4 min when reloading arrays, 30 sec otherwise; creates Fig 3
-makefig2_asboxplots=1; %10 sec; creates Fig 2
+makefig3=0; %4 min when reloading arrays, 30 sec otherwise; creates Fig 3
+makefig2=0; %10 sec; creates Fig 2
 calcspreads_era5=0; %6 min
     minfrac=0.5; %default (for main Fig 1) is 0.5; for supplemental figure, 0.4; ALSO APPLIES TO CALCSPREADS_POINTDATA
 getvariousstats=0; %2 min; required on start-up
 calcspreads_pointdata=0; %3 sec; required on start-up
-makefig1_revised=0; %45 sec; creates Fig 1
-    if makefig1_revised==1;datasettodo='era5';end
+makefig1=0; %45 sec; creates Fig 1
+    if makefig1==1;datasettodo='era5';end
 calcs_diurnalsequence=0; %30 min to restart all (i.e. when changing hotdaysbasedon)
     hotdaysbasedon='abudhabi'; %'abudhabi' [default] or 'liwaoasis' (from besti_era5 array)
 finaldiurnalseqprep=0; %5 sec; required on start-up
-map_diurnalsequence=0; %25 sec; creates Fig 4
+makefig4=0; %25 sec; creates Fig 4
 getvertprofiles=0;
     vertprofileprep=0; 
         dorharmprep=0; %2 min
-makefig5_revised=0; %15 sec for plotting alone; creates Fig 5
+makefig5=0; %15 sec for plotting alone; creates Fig 5
     doera5prep=0; %15 min; requires having done era5pressurelevelreading_main
 readutciandwbgtdata=0; %1 hour; UTCI and WBGT were calculated in Jupyter notebook utci_wbgt_full.ipynb
 readlurompsheatindex=0; %8 min
@@ -54,6 +54,12 @@ suppfigwinddirs=0; %1 min 20 sec
     plotwindshiftmap=0;
     plotabudhabivsdubaidetail=1;
     plotdiurnalqrange=0;
+savedataforfigures=0; %saves data to mat files for upload to figshare
+    dofig1=0;
+    dofig2=0;
+    dofig3=0;
+    dofig4=0;
+    dofig5=0;
    
 
 if dostartuptasks==1;setup_nctoolbox;reloaddata=1;getvariousstats=1;calcspreads_pointdata=1;finaldiurnalseqprep=1;end
@@ -134,6 +140,15 @@ for loop=1:size(latsofint,1)
 end
 loccolors=[colors('medium green');colors('somewhat dark blue');colors('sirkes_orange');colors('somewhat dark red')];
 newregcolors=[colors('somewhat dark blue');colors('medium green');colors('somewhat dark red')];
+
+%Tw-purple; T-dark orange (almost red); q-green
+cmap_tw=colormaps('whitelightpurpledarkpurple','more','not');twcolor=cmap_tw(round(3*end/4),:);
+cmap_t=colormaps('whitelightorangedarkorange','more','not');tcolor=cmap_t(round(3*end/4),:);
+cmap_q=colormaps('whitelightgreendarkgreen','more','not');qcolor=cmap_q(round(3*end/4),:);
+difffrommax=max(twcolor)-twcolor;twcolor_pale=twcolor+0.4*difffrommax;
+difffrommax=max(tcolor)-tcolor;tcolor_pale=tcolor+0.4*difffrommax;
+difffrommax=max(qcolor)-qcolor;qcolor_pale=qcolor+0.4*difffrommax;
+
 
 %Where to define based on 
 if strcmp(hotdaysbasedon,'abudhabi')
@@ -1164,7 +1179,7 @@ if era5p95diurnalcomposites==1
 end
 
 
-if makefig3_revised==1
+if makefig3==1
     %Diurnal composite for several points near Abu Dhabi
     %As above, 1: Abu Dhabi city, 2: Persian Gulf waters, 3: rural coast, 4: inland oasis
     %LST is UTC+4, so shift diurnal-mean arrays to reflect this
@@ -1374,17 +1389,16 @@ end
 
 
 
-
-if makefig2_asboxplots==1
+if makefig2==1
     figure(1002);clf;c=0;figname='fig2_boxplots';
     lefts=[0.05 0.52;0.05 0.52;0.05 0.52];bottoms=[0.69 0.69;0.385 0.385;0.08 0.08];wwidth=0.42;hheight=0.26;
     for vl=1:3
         if vl==1
-            allstn=allstntw;allgridpt=allgridpttw;ylab=strcat('Tw (',char(176),'C)');
+            allstn=allstntw;allgridpt=allgridpttw;ylab=strcat('Tw (',char(176),'C)');mycolor=twcolor;
         elseif vl==2
-            allstn=allstnt;allgridpt=allgridptt;ylab=strcat('T (',char(176),'C)');
+            allstn=allstnt;allgridpt=allgridptt;ylab=strcat('T (',char(176),'C)');mycolor=tcolor;
         elseif vl==3
-            allstn=allstnq;allgridpt=allgridptq;ylab='q (g/kg)';
+            allstn=allstnq;allgridpt=allgridptq;ylab='q (g/kg)';mycolor=qcolor;
         end
         for reg=2:3
             subplot(3,2,vl*2-2+reg-1);hold on;c=c+1;
@@ -1401,7 +1415,7 @@ if makefig2_asboxplots==1
                 data=cat(1,data,stndatabyhr(:,hr));data=cat(1,data,gridptdatabyhr(:,hr));
                 groups=cat(1,groups,(hr-1)*2+ones(stnsz,1));groups=cat(1,groups,(hr-1)*2+1+ones(gridptsz,1));
             end
-            positions=[1 1.7 3 3.7 5 5.7 7 7.7 9 9.7 11 11.7 13 13.7 15 15.7 17 17.7 19 19.7 21 21.7 23 23.7];
+            positions=[0.9 1.7 2.9 3.7 4.9 5.7 6.9 7.7 8.9 9.7 10.9 11.7 12.9 13.7 14.9 15.7 16.9 17.7 18.9 19.7 20.9 21.7 22.9 23.7];
             bh=boxplot(data,groups,'positions',positions,'symbol','','width',0.4); %with outliers removed
 
             set(bh,'linewidth',1.5);
@@ -1420,10 +1434,19 @@ if makefig2_asboxplots==1
             %for i=2:4:length(considerdeleting);delete(considerdeleting(i));end
             for i=1:length(considerdeleting);delete(considerdeleting(i));end
 
-            %Fill boxes with color for better visual impression
+            %Fill boxes with color
             colorarr=[colors('gray');colors('sirkes_dark gold')];colorarr=repmat(colorarr,[12 1]);
             h=findobj(gca,'Tag','Box');
             for j=1:length(h);patch(get(h(j),'XData'),get(h(j),'YData'),colorarr(j,:),'FaceAlpha',0.5);end
+
+            %Also add colored dots -- means of station & ERA5 data -- to aid in visual assessment of diurnal cycle
+            for hr=1:2:24
+                p75mean=mean([quantile(stndatabyhr(:,hr),0.75);quantile(gridptdatabyhr(:,hr),0.75)]);
+                p50mean=mean([quantile(stndatabyhr(:,hr),0.50);quantile(gridptdatabyhr(:,hr),0.50)]);
+                p25mean=mean([quantile(stndatabyhr(:,hr),0.25);quantile(gridptdatabyhr(:,hr),0.25)]);
+                plot(hr+0.3,p75mean,'o','MarkerFaceColor',mycolor,'MarkerEdgeColor',mycolor,'MarkerSize',3.5);
+                plot(hr+0.3,p25mean,'o','MarkerFaceColor',mycolor,'MarkerEdgeColor',mycolor,'MarkerSize',3.5);
+            end
 
             %set(gca,'ylim',[round2(min(data),1,'floor') round2(max(data),1,'ceil')]);
             if vl==1;set(gca,'ylim',[11 34]);elseif vl==2;set(gca,'ylim',[19 50]);elseif vl==3;set(gca,'ylim',[0 32]);end
@@ -1822,7 +1845,7 @@ if calcspreads_pointdata==1
 end
 
 
-if makefig1_revised==1
+if makefig1==1
     figure(800);clf;
 
     %Panel a: map
@@ -1855,7 +1878,7 @@ if makefig1_revised==1
     %Panel b: Tw values
     ax=subplot(10,10,100);gca=ax;
     cmin=25;cmax=31;
-    if strcmp(datasettodo,'era5')
+    if strcmp(datasettodo,'era5') %default
         data={lat_era5;lon_era5;tw_era5_p95};
     elseif strcmp(datasettodo,'era5land')
         data={lat_era5land;lon_era5land;tw_era5l_p95};
@@ -2152,7 +2175,7 @@ if finaldiurnalseqprep==1
 end
 
 
-if map_diurnalsequence==1
+if makefig4==1
     %Make plots
 
     %Top row: T-defined hot days
@@ -2352,7 +2375,7 @@ if getvertprofiles==1
 end
 
 
-if makefig5_revised==1
+if makefig5==1
     if doera5prep==1
         %Reminder: levels obtained here were 500, 700, 850, 925, 975, 1000
         exist twlev_days;
@@ -2467,12 +2490,6 @@ if makefig5_revised==1
     lefts=repmat([0.845-horizspacing*5;0.845-horizspacing*4;0.845-horizspacing*3;0.845-horizspacing*2;0.845-horizspacing*1;0.845],4,1);
     bottoms=[repmat(0.75,6,1);repmat(0.51,6,1);repmat(0.27,6,1)];
     w_big=0.14;h_big=0.22;
-    cmap_tw=colormaps('whitelightpurpledarkpurple','more','not');twcolor=cmap_tw(round(3*end/4),:);
-    cmap_t=colormaps('whitelightorangedarkorange','more','not');tcolor=cmap_t(round(3*end/4),:);
-    cmap_q=colormaps('whitelightgreendarkgreen','more','not');qcolor=cmap_q(round(3*end/4),:);
-    difffrommax=max(twcolor)-twcolor;twcolor_pale=twcolor+0.4*difffrommax;
-    difffrommax=max(tcolor)-tcolor;tcolor_pale=tcolor+0.4*difffrommax;
-    difffrommax=max(qcolor)-qcolor;qcolor_pale=qcolor+0.4*difffrommax;
     timelabels={'12am';'4am';'8am';'12pm';'4pm';'8pm'};
     reglabels={'Gulf';'Coast';'Inland'};
 
@@ -3301,5 +3318,72 @@ if suppfigwinddirs==1
         datatype='custom';region={wb;nb-0.95;eb-2.5;sb+1.45};plotModelData(data,region,vararginnew,datatype);
         set(gcf,'color','w');
         figname='diurnalqrange';curpart=1;highqualityfiguresetup;curpart=2;highqualityfiguresetup;
+    end
+end
+
+
+if savedataforfigures==1
+
+    %Figure 1
+    if dofig1==1
+        save(strcat(saveloc,'figure1data'),'lat_era5_10xres','lon_era5_10xres','myregs_era5_10xres','sb','nb','wb','eb','lat_era5','lon_era5','tw_era5_p95','tw_pws_p95',...
+            'pwsstnlats','pwsstnlons','stninfo_inland','stninfo_sPG','stninfo_wPG','centralhours_local_era5','centralwinddirs_era5','centralpblhs_era5',...
+            'centralhours_hi_local_era5','centralhours_utci_local_era5','centralhours_wbgt_local_era5','centralwinddirs_pws',...
+            'centralwinddirs_inland','centralwinddirs_sPG','centralwinddirs_wPG','tw_inlandstns_p95','tw_sPGstns_p95','tw_wPGstns_p95');
+    end
+
+    %Figure 2
+    if dofig2==1
+        save(strcat(saveloc,'figure2data'),'allstntw','allgridpttw','allstnt','allgridptt','allstnq','allgridptq');
+    end
+
+
+    %Figure 3
+    if dofig3==1
+        save(strcat(saveloc,'figure3data'),'tw2m_diurnalmean','utci2m_diurnalmean','wbgt2m_diurnalmean','hi2m_diurnalmean','t2m_diurnalmean','q2m_diurnalmean',...
+            'pblh_diurnalmean','windspd10_diurnalmean','winddir10_diurnalmode','tw2mp95_diurnalmean','utci2mp95_diurnalmean','wbgt2mp95_diurnalmean',...
+            'hi2mp95_diurnalmean','t2mp95_diurnalmean','q2mp95_diurnalmean','pblhp95_diurnalmean','windspd10p95_diurnalmean','winddir10p95_diurnalmode','myregs_era5');
+    end
+
+
+    %Figure 4
+    %First run finaldiurnalseqprep, if needed
+    if dofig4==1
+        save(strcat(saveloc,'figure4data'),'qmap75_thotdays','qmap90_thotdays','tmap75_thotdays','tmap90_thotdays','umap_thotdays','vmap_thotdays',...
+            'qmap75_twhotdays','qmap90_twhotdays','tmap75_twhotdays','tmap90_twhotdays','umap_twhotdays','vmap_twhotdays',...
+            'era5latsz','era5lonsz','sb','nb','wb','eb','lat_era5','lon_era5','mylat','mylon');
+    end
+
+    %Figure 5
+    if dofig5==1
+        tmp=load(strcat(saveloc,'hotdaysprofiles_new.mat'));
+        twprofile_twhotdays_era5_mean=tmp.twprofile_twhotdays_era5_mean;twprofile_twhotdays_era5_stdev=tmp.twprofile_twhotdays_era5_stdev;
+        tprofile_twhotdays_era5_mean=tmp.tprofile_twhotdays_era5_mean;tprofile_twhotdays_era5_stdev=tmp.tprofile_twhotdays_era5_stdev;
+        qprofile_twhotdays_era5_mean=tmp.qprofile_twhotdays_era5_mean;qprofile_twhotdays_era5_stdev=tmp.qprofile_twhotdays_era5_stdev;
+        twprofile_alldays_era5_mean=tmp.twprofile_alldays_era5_mean;twprofile_alldays_era5_stdev=tmp.twprofile_alldays_era5_stdev;
+        tprofile_alldays_era5_mean=tmp.tprofile_alldays_era5_mean;tprofile_alldays_era5_stdev=tmp.tprofile_alldays_era5_stdev;
+        qprofile_alldays_era5_mean=tmp.qprofile_alldays_era5_mean;qprofile_alldays_era5_stdev=tmp.qprofile_alldays_era5_stdev;
+    
+        tmp=load(strcat(saveloc,'hotdaysprofiles_rharm.mat'));
+        twprofile_alldays_rharm_byloc=tmp.twprofile_alldays_rharm_byloc;twprofile_twhotdays_rharm_byloc=tmp.twprofile_twhotdays_rharm_byloc;
+    
+        stntwarray=squeeze(subdailytw_sPG(1,:,:));
+        exist tw95whereabove;
+        if ans==0;tmp=load(strcat(saveloc,'hotdaysstarts.mat'));tw95whereabove=tmp.tw95whereabove;end
+        c=0;clear stntw;
+        for day=1:climodaylen*nyr
+            if sum(tw95whereabove(besti_era5(1),bestj_era5(1),:,day))>=1
+                c=c+1;
+                stntw(c,:)=stntwarray(day,:);
+            end
+        end
+        abudhabitw_twhotdays=mean(stntw,'omitnan');
+        abudhabitw_alldays=mean(stntwarray,'omitnan');
+    
+    
+        save(strcat(saveloc,'figure5data'),'twprofile_twhotdays_era5_mean','twprofile_twhotdays_era5_stdev','tprofile_twhotdays_era5_mean','tprofile_twhotdays_era5_stdev',...
+            'qprofile_twhotdays_era5_mean','qprofile_twhotdays_era5_stdev','twprofile_alldays_era5_mean','twprofile_alldays_era5_stdev',...
+            'tprofile_alldays_era5_mean','tprofile_alldays_era5_stdev','qprofile_alldays_era5_mean','qprofile_alldays_era5_stdev',...
+            'twprofile_alldays_rharm_byloc','twprofile_twhotdays_rharm_byloc','abudhabitw_twhotdays','abudhabitw_alldays');
     end
 end
